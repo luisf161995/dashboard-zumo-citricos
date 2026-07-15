@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard de Tiempos de Producción – Planta de Zumo de Cítricos</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+/* ===== Variables de color (paleta cítrica) ===== */
+:root{
+  --naranja:#F58220; --naranja-soft:#FDE8D2;
+  --verde:#4C9A52; --verde-soft:#E1F0E2;
+  --amarillo:#F6C026; --amarillo-soft:#FCF1CD;
+  --gris:#6B7280; --gris-soft:#EEF0F3;
+  --azul:#3E7CB1; --azul-soft:#DFEAF3;
+  --bg:#F7F8F6; --card:#FFFFFF; --ink:#22262B; --muted:#7C8591;
+  --line:#E7E9E5; --shadow:0 4px 20px rgba(40,45,40,.06);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--ink);line-height:1.5;padding:28px 22px 60px}
+h1,h2,h3{font-family:'Fraunces',serif;font-weight:600}
+
+/* ===== Encabezado ===== */
+header.main{max-width:1320px;margin:0 auto 26px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.logo{width:54px;height:54px;border-radius:16px;background:linear-gradient(135deg,var(--naranja),var(--amarillo));display:flex;align-items:center;justify-content:center;font-size:28px;box-shadow:var(--shadow)}
+header.main h1{font-size:1.7rem;letter-spacing:-.5px}
+header.main p{color:var(--muted);font-size:.95rem;margin-top:2px}
+
+.wrap{max-width:1320px;margin:0 auto}
+
+/* ===== Secciones (separadores) ===== */
+.section-title{display:flex;align-items:center;gap:12px;margin:34px 0 16px}
+.section-title h2{font-size:1.3rem;letter-spacing:-.4px}
+.section-title .line{flex:1;height:1px;background:var(--line)}
+.section-title .badge{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.6px;padding:4px 10px;border-radius:20px}
+.badge.prod{background:var(--verde-soft);color:#2E6B33}
+.badge.alist{background:var(--azul-soft);color:#2C5A80}
+.badge.charts{background:var(--naranja-soft);color:#B35C0E}
+
+/* ===== Sub-módulos dentro de un formulario ===== */
+.subhead{grid-column:1/-1;display:flex;align-items:center;gap:10px;margin:4px 0 -2px}
+.subhead:first-child{margin-top:0}
+.subhead .chip{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.6px;padding:3px 10px;border-radius:20px;background:var(--amarillo-soft);color:#8A6B07}
+.subhead .chip.prod{background:var(--verde-soft);color:#2E6B33}
+.subhead .chip.lavado{background:var(--azul-soft);color:#2C5A80}
+.subhead .chip.limon{background:var(--amarillo-soft);color:#8A6B07}
+.subhead .sline{flex:1;height:1px;background:var(--line)}
+
+/* ===== KPIs ===== */
+.kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:16px;margin-bottom:26px}
+.kpi{background:var(--card);border-radius:18px;padding:18px 18px 16px;box-shadow:var(--shadow);border:1px solid var(--line);position:relative;overflow:hidden}
+.kpi::before{content:'';position:absolute;top:0;left:0;width:100%;height:4px;background:var(--gris)}
+.kpi.k1::before{background:var(--naranja)} .kpi.k2::before{background:var(--verde)}
+.kpi.k3::before{background:var(--amarillo)} .kpi.k4::before{background:var(--gris)}
+.kpi.k5::before{background:var(--verde)} .kpi.k6::before{background:var(--naranja)}
+.kpi .label{font-size:.72rem;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);font-weight:600}
+.kpi .value{font-family:'Fraunces',serif;font-size:1.55rem;font-weight:600;margin-top:6px;letter-spacing:-.5px}
+.kpi .sub{font-size:.78rem;color:var(--muted);margin-top:2px}
+
+/* ===== Paneles ===== */
+.panel{background:var(--card);border-radius:18px;padding:22px;box-shadow:var(--shadow);border:1px solid var(--line);margin-bottom:22px}
+.panel h2{font-size:1.12rem;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.panel h2 .dot{width:9px;height:9px;border-radius:50%;background:var(--naranja)}
+.panel h2 .dot.blue{background:var(--azul)}
+
+/* ===== Formulario ===== */
+.form-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.field{display:flex;flex-direction:column;gap:5px}
+.field label{font-size:.78rem;font-weight:600;color:var(--gris)}
+.field input,.field select{padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-family:inherit;font-size:.9rem;background:#fff;transition:border .15s}
+.field input:focus,.field select:focus{outline:none;border-color:var(--naranja)}
+.form-actions{grid-column:1/-1;display:flex;gap:12px;margin-top:6px}
+.btn{padding:11px 22px;border:none;border-radius:10px;font-family:inherit;font-weight:600;font-size:.9rem;cursor:pointer;transition:transform .1s,filter .15s}
+.btn:active{transform:translateY(1px)}
+.btn-primary{background:var(--naranja);color:#fff}
+.btn-primary:hover{filter:brightness(1.05)}
+.btn-primary.blue{background:var(--azul)}
+.btn-ghost{background:var(--gris-soft);color:var(--gris)}
+.btn-ghost:hover{filter:brightness(.97)}
+
+/* ===== Filtros ===== */
+.filters{display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap}
+.filters .field{min-width:150px}
+
+/* ===== Tabla ===== */
+.table-scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.86rem}
+th,td{padding:11px 12px;text-align:left;white-space:nowrap}
+th{background:var(--gris-soft);color:var(--gris);font-weight:600;font-size:.74rem;text-transform:uppercase;letter-spacing:.4px;position:sticky;top:0}
+tbody tr{border-bottom:1px solid var(--line)}
+tbody tr:hover{background:#FBFCFB}
+td.num{text-align:right;font-variant-numeric:tabular-nums}
+.tag{padding:3px 10px;border-radius:20px;font-size:.74rem;font-weight:600}
+.tag.naranja{background:var(--naranja-soft);color:#B35C0E}
+.tag.limon{background:var(--amarillo-soft);color:#8A6B07}
+.tag.mandarina{background:var(--naranja-soft);color:#C2410C}
+.tag.otro{background:var(--gris-soft);color:var(--gris)}
+.tag.inicial{background:var(--azul-soft);color:#2C5A80}
+.tag.final{background:var(--gris-soft);color:var(--gris)}
+.tag.pequeno{background:var(--amarillo-soft);color:#8A6B07}
+.tag.mediano{background:var(--naranja-soft);color:#B35C0E}
+.tag.grande{background:var(--verde-soft);color:#2E6B33}
+.tag.bueno{background:var(--verde-soft);color:#2E6B33}
+.tag.regular{background:var(--amarillo-soft);color:#8A6B07}
+.tag.malo{background:#FCE9E6;color:#C0392B}
+.tag.cumple{background:var(--verde-soft);color:#2E6B33}
+.tag.nocumple{background:#FCE9E6;color:#C0392B}
+.del{background:none;border:none;cursor:pointer;color:#C0392B;font-size:1.05rem;padding:2px 6px;border-radius:6px}
+.del:hover{background:#FCE9E6}
+.empty{text-align:center;color:var(--muted);padding:30px;font-style:italic}
+
+/* ===== Gráficas ===== */
+.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+.chart-box{background:var(--card);border-radius:18px;padding:20px;box-shadow:var(--shadow);border:1px solid var(--line)}
+.chart-box h3{font-size:1rem;margin-bottom:14px}
+.chart-box canvas{max-height:300px}
+.rank-list{list-style:none;font-size:.88rem}
+.rank-list li{display:flex;justify-content:space-between;padding:9px 12px;border-radius:9px;margin-bottom:6px}
+.rank-list li.good{background:var(--verde-soft)}
+.rank-list li.bad{background:#FCE9E6}
+.rank-list .v{font-weight:600;font-variant-numeric:tabular-nums}
+.rank-sub{font-size:.78rem;color:var(--muted);margin:-6px 0 10px}
+
+/* ===== Toast ===== */
+#toast{position:fixed;bottom:26px;right:26px;background:var(--ink);color:#fff;padding:14px 22px;border-radius:12px;font-size:.9rem;font-weight:500;box-shadow:0 8px 30px rgba(0,0,0,.25);opacity:0;transform:translateY(20px);transition:all .3s;z-index:999;max-width:340px}
+#toast.show{opacity:1;transform:translateY(0)}
+#toast.err{background:#C0392B}
+#toast.ok{background:var(--verde)}
+
+/* ===== Responsive ===== */
+@media(max-width:1100px){
+  .kpis{grid-template-columns:repeat(3,1fr)}
+  .form-grid{grid-template-columns:repeat(2,1fr)}
+  .charts-grid{grid-template-columns:1fr}
+}
+@media(max-width:560px){
+  .kpis{grid-template-columns:repeat(2,1fr)}
+  .form-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<header class="main">
+  <div class="logo">🍊</div>
+  <div>
+    <h1>Dashboard de Tiempos de Producción – Planta de Zumo de Cítricos</h1>
+    <p>Monitoreo diario de recepción, alistamiento por máquina, transformación y eficiencia operativa.</p>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- =========================================================
+       BLOQUE 1: ALISTAMIENTOS POR MÁQUINA
+       ========================================================= -->
+  <div class="section-title">
+    <h2>Alistamientos por máquina</h2>
+    <span class="badge alist">Alistamiento inicial · Alistamiento final</span>
+    <div class="line"></div>
+  </div>
+
+  <!-- Formulario alistamiento -->
+  <section class="panel">
+    <h2><span class="dot blue"></span>Registrar alistamiento</h2>
+    <div class="form-grid">
+      <div class="field"><label>Fecha</label><input type="date" id="aFecha"></div>
+      <div class="field"><label>Máquina</label>
+        <select id="aMaquina">
+          <option value="Automática">Automática</option>
+          <option value="Limón">Limón</option>
+          <option value="Zumex 1">Zumex 1</option>
+          <option value="Zumex 2">Zumex 2</option>
+          <option value="Zumex 3">Zumex 3</option>
+        </select>
+      </div>
+      <div class="field"><label>Tipo de alistamiento</label>
+        <select id="aTipo">
+          <option value="Inicial">Alistamiento inicial</option>
+          <option value="Final">Alistamiento final</option>
+        </select>
+      </div>
+      <div class="field"><label>Tiempo de alistamiento (min)</label><input type="number" id="aTiempo" min="0" step="0.1" placeholder="0"></div>
+      <div class="field"><label>Persona responsable</label><input type="text" id="aResponsable" placeholder="Nombre del operario"></div>
+      <div class="form-actions">
+        <button class="btn btn-primary blue" onclick="agregarAlistamiento()">+ Agregar alistamiento</button>
+        <button class="btn btn-ghost" onclick="limpiarFormAlist()">Limpiar formulario</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Filtros alistamiento -->
+  <section class="panel">
+    <h2><span class="dot blue"></span>Filtros de alistamiento</h2>
+    <div class="filters">
+      <div class="field"><label>Desde</label><input type="date" id="filAlistDesde"></div>
+      <div class="field"><label>Hasta</label><input type="date" id="filAlistHasta"></div>
+      <div class="field"><label>Máquina</label>
+        <select id="filAlistMaquina">
+          <option value="">Todas</option>
+          <option value="Automática">Automática</option>
+          <option value="Limón">Limón</option>
+          <option value="Zumex 1">Zumex 1</option>
+          <option value="Zumex 2">Zumex 2</option>
+          <option value="Zumex 3">Zumex 3</option>
+        </select>
+      </div>
+      <div class="field"><label>Tipo</label>
+        <select id="filAlistTipo">
+          <option value="">Ambos</option>
+          <option value="Inicial">Alistamiento inicial</option>
+          <option value="Final">Alistamiento final</option>
+        </select>
+      </div>
+      <button class="btn btn-primary blue" onclick="aplicarFiltrosAlist()">Aplicar</button>
+      <button class="btn btn-ghost" onclick="reiniciarFiltrosAlist()">Reiniciar filtros</button>
+    </div>
+  </section>
+
+  <!-- Tabla alistamiento -->
+  <section class="panel">
+    <h2><span class="dot blue"></span>Registros de alistamiento</h2>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Fecha</th><th>Máquina</th>
+            <th>Tipo</th><th>Tiempo (min)</th><th>Responsable</th><th></th>
+          </tr>
+        </thead>
+        <tbody id="tbodyAlist"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- =========================================================
+       BLOQUE 2: PROCESOS POR MATERIAS PRIMAS
+       (Recepción + Lavado/Desinfección y Transporte + Llenado[Limón] + Transformación)
+       ========================================================= -->
+  <div class="section-title">
+    <h2>Procesos por materias primas</h2>
+    <span class="badge prod">Recepción · Lavado/Transporte · Transformación</span>
+    <div class="line"></div>
+  </div>
+
+  <!-- KPIs producción -->
+  <section class="kpis" id="kpisProd">
+    <div class="kpi k1"><div class="label">Litros reales procesados</div><div class="value" id="kpiLitros">–</div><div class="sub">total acumulado</div></div>
+    <div class="kpi k2"><div class="label">Tiempo total transformación</div><div class="value" id="kpiTiempo">–</div><div class="sub">minutos</div></div>
+    <div class="kpi k3"><div class="label">Tiempo prom. por litro</div><div class="value" id="kpiPorLitro">–</div><div class="sub">min / litro</div></div>
+    <div class="kpi k4"><div class="label">Cumplimiento promedio</div><div class="value" id="kpiCumplimiento" style="font-size:1.1rem">–</div><div class="sub">real vs. proyectado</div></div>
+    <div class="kpi k5"><div class="label">Mejor día (eficiencia)</div><div class="value" id="kpiMejor" style="font-size:1.05rem">–</div><div class="sub" id="kpiMejorV"></div></div>
+    <div class="kpi k6"><div class="label">Peor día (eficiencia)</div><div class="value" id="kpiPeor" style="font-size:1.05rem">–</div><div class="sub" id="kpiPeorV"></div></div>
+  </section>
+
+  <!-- Formulario único: Recepción + Lavado/Transporte + Llenado(Limón) + Transformación -->
+  <section class="panel">
+    <h2><span class="dot"></span>Registrar proceso</h2>
+    <div class="form-grid">
+      <div class="field"><label>Fecha del registro</label><input type="date" id="fFecha"></div>
+      <div class="field"><label>Tipo de materia prima</label>
+        <select id="fMateria" onchange="toggleLlenadoLimon()">
+          <option value="Naranja">Naranja</option>
+          <option value="Limón">Limón</option>
+          <option value="Mandarina">Mandarina</option>
+          <option value="Otro">Otro</option>
+        </select>
+      </div>
+
+      <div class="subhead"><span class="chip">Recepción</span><div class="sline"></div></div>
+      <div class="field"><label>Nombre del proveedor</label><input type="text" id="fNombreProv" placeholder="Nombre del proveedor"></div>
+      <div class="field"><label>Tiempo</label><input type="number" id="fTiempoProv" min="0" step="0.1" placeholder="0"></div>
+      <div class="field"><label>Tiempo en planta (días)</label><input type="number" id="fTiempoPlanta" min="0" step="0.1" placeholder="0"></div>
+      <div class="field"><label>Tamaño</label>
+        <select id="fTamano">
+          <option value="Pequeño">Pequeño</option>
+          <option value="Mediano">Mediano</option>
+          <option value="Grande">Grande</option>
+        </select>
+      </div>
+      <div class="field"><label>Estado fitosanitario</label>
+        <select id="fEstado">
+          <option value="Bueno">Bueno</option>
+          <option value="Regular">Regular</option>
+          <option value="Malo">Malo</option>
+        </select>
+      </div>
+      <div class="field"><label>Responsable de recepción</label><input type="text" id="fRespRecep" placeholder="Nombre del responsable"></div>
+
+      <div class="subhead"><span class="chip lavado">Lavado / Desinfección y Transporte</span><div class="sline"></div></div>
+      <div class="field"><label>Tiempo (min)</label><input type="number" id="fLavadoTiempo" min="0" step="0.1" placeholder="0"></div>
+      <div class="field"><label>Nombre Responsable 1</label><input type="text" id="fLavadoResp1" placeholder="Nombre del responsable"></div>
+      <div class="field"><label>Nombre Responsable 2</label><input type="text" id="fLavadoResp2" placeholder="Opcional"></div>
+
+      <div class="subhead" id="llenadoLimonSubhead"><span class="chip limon">Llenado (solo Limón)</span><div class="sline"></div></div>
+      <div class="field" id="llenadoLimonField"><label>Tiempo (min)</label><input type="number" id="fLlenadoLimonTiempo" min="0" step="0.1" placeholder="0"></div>
+
+      <div class="subhead"><span class="chip prod">Transformación</span><div class="sline"></div></div>
+      <div class="field"><label>Cantidad de materia prima (# canastillas)</label><input type="number" id="fCanastillas" min="0" step="1" placeholder="0"></div>
+      <div class="field"><label>Tiempo (min)</label><input type="number" id="fTiempoTransf" min="0" step="0.1" placeholder="0"></div>
+      <div class="field"><label>Litros procesados final real</label><input type="number" id="fLitrosReal" min="0" step="0.1" placeholder="0"></div>
+      <div class="field"><label>Litros procesados proyectados</label><input type="number" id="fLitrosProy" min="0" step="0.1" placeholder="0"></div>
+
+      <div class="form-actions">
+        <button class="btn btn-primary" onclick="agregarRegistro()">+ Agregar registro</button>
+        <button class="btn btn-ghost" onclick="limpiarForm()">Limpiar formulario</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Filtros producción -->
+  <section class="panel">
+    <h2><span class="dot" style="background:var(--verde)"></span>Filtros</h2>
+    <div class="filters">
+      <div class="field"><label>Desde</label><input type="date" id="filDesde"></div>
+      <div class="field"><label>Hasta</label><input type="date" id="filHasta"></div>
+      <div class="field"><label>Materia prima</label>
+        <select id="filMateria">
+          <option value="">Todas</option>
+          <option value="Naranja">Naranja</option>
+          <option value="Limón">Limón</option>
+          <option value="Mandarina">Mandarina</option>
+          <option value="Otro">Otro</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" onclick="aplicarFiltros()">Aplicar</button>
+      <button class="btn btn-ghost" onclick="reiniciarFiltros()">Reiniciar filtros</button>
+    </div>
+  </section>
+
+  <!-- Tabla única de registros de producción -->
+  <section class="panel">
+    <h2><span class="dot" style="background:var(--amarillo)"></span>Registros de producción</h2>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Fecha</th><th>Materia prima</th>
+            <th>Proveedor</th><th>Tiempo</th><th>Tiempo en planta (días)</th><th>Tamaño</th><th>Estado fitosanitario</th><th>Resp. recepción</th>
+            <th>Tiempo lavado/transporte (min)</th><th>Responsable 1</th><th>Responsable 2</th>
+            <th>Llenado limón (min)</th>
+            <th>Canastillas</th><th>Tiempo transf. (min)</th><th>Litros reales</th><th>Litros proyectados</th><th>Cumplimiento</th><th>Min / litro</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- =========================================================
+       BLOQUE 3: GRÁFICAS (sección única con todos los gráficos)
+       ========================================================= -->
+  <div class="section-title">
+    <h2>Gráficas</h2>
+    <span class="badge charts">Alistamiento · Producción</span>
+    <div class="line"></div>
+  </div>
+
+  <div class="charts-grid">
+    <div class="chart-box"><h3>Tiempo promedio de alistamiento por máquina</h3><canvas id="chAlistMaquina"></canvas></div>
+    <div class="chart-box"><h3>Tendencia diaria del tiempo de alistamiento</h3><canvas id="chAlistTendencia"></canvas></div>
+    <div class="chart-box"><h3>Distribución de registros por máquina</h3><canvas id="chAlistDona"></canvas></div>
+    <div class="chart-box"><h3>Tiempo promedio por responsable (alistamiento)</h3><canvas id="chAlistResp"></canvas></div>
+    <div class="chart-box"><h3>Tendencia diaria: tiempo total y por litro (transformación)</h3><canvas id="chLineas"></canvas></div>
+    <div class="chart-box"><h3>Litros reales vs. proyectados por día</h3><canvas id="chBarras"></canvas></div>
+    <div class="chart-box"><h3>Cumplimiento acumulado: litros reales vs. déficit</h3><canvas id="chDona"></canvas></div>
+    <div class="chart-box"><h3>Tiempo promedio por litro según materia prima</h3><canvas id="chMateria"></canvas></div>
+    <div class="chart-box" style="grid-column:1/-1">
+      <h3>Ranking de eficiencia diaria (transformación)</h3>
+      <p class="rank-sub">Menor tiempo por litro = mayor eficiencia.</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:22px">
+        <div><strong style="font-size:.85rem;color:var(--verde)">Días más eficientes</strong><ul class="rank-list" id="rankGood"></ul></div>
+        <div><strong style="font-size:.85rem;color:#C0392B">Días menos eficientes</strong><ul class="rank-list" id="rankBad"></ul></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* ============================================================
+   ALMACENAMIENTO
+   ============================================================ */
+const STORAGE_KEY = 'zumo_citricos_registros';
+const STORAGE_KEY_ALIST = 'zumo_citricos_alistamientos';
+
+// Datos de ejemplo — registros de producción (recepción + lavado/transporte + llenado limón + transformación)
+const EJEMPLOS = [
+  {id:1,fecha:'2026-05-18',materia:'Naranja',proveedor:'Frutas del Valle',tiempoProv:35,tiempoPlanta:1,tamano:'Grande',estado:'Bueno',respRecep:'Marta Osorio',lavadoTiempo:20,lavadoResp1:'Sandra Gil',lavadoResp2:'Pedro Marín',llenadoLimonTiempo:null,canastillas:48,tiempoTransf:180,litrosReal:820,litrosProy:850},
+  {id:2,fecha:'2026-05-19',materia:'Limón',proveedor:'Cítricos La Ceja',tiempoProv:28,tiempoPlanta:2,tamano:'Mediano',estado:'Bueno',respRecep:'Marta Osorio',lavadoTiempo:18,lavadoResp1:'Sandra Gil',lavadoResp2:'',llenadoLimonTiempo:12,canastillas:32,tiempoTransf:160,litrosReal:520,litrosProy:560},
+  {id:3,fecha:'2026-05-20',materia:'Mandarina',proveedor:'Agrooriente',tiempoProv:40,tiempoPlanta:1,tamano:'Pequeño',estado:'Regular',respRecep:'Diego Hoyos',lavadoTiempo:22,lavadoResp1:'Pedro Marín',lavadoResp2:'',llenadoLimonTiempo:null,canastillas:38,tiempoTransf:170,litrosReal:610,litrosProy:640},
+  {id:4,fecha:'2026-05-21',materia:'Naranja',proveedor:'Frutas del Valle',tiempoProv:32,tiempoPlanta:3,tamano:'Grande',estado:'Malo',respRecep:'Diego Hoyos',lavadoTiempo:25,lavadoResp1:'Sandra Gil',lavadoResp2:'Pedro Marín',llenadoLimonTiempo:null,canastillas:54,tiempoTransf:200,litrosReal:880,litrosProy:960},
+  {id:5,fecha:'2026-05-22',materia:'Otro',proveedor:'Cosecha Sur',tiempoProv:25,tiempoPlanta:1,tamano:'Mediano',estado:'Bueno',respRecep:'Marta Osorio',lavadoTiempo:16,lavadoResp1:'Pedro Marín',lavadoResp2:'',llenadoLimonTiempo:null,canastillas:24,tiempoTransf:150,litrosReal:390,litrosProy:400},
+  {id:6,fecha:'2026-05-23',materia:'Limón',proveedor:'Cítricos La Ceja',tiempoProv:30,tiempoPlanta:2,tamano:'Mediano',estado:'Bueno',respRecep:'Diego Hoyos',lavadoTiempo:19,lavadoResp1:'Sandra Gil',lavadoResp2:'',llenadoLimonTiempo:14,canastillas:30,tiempoTransf:155,litrosReal:500,litrosProy:520},
+];
+
+// Datos de ejemplo — alistamientos por máquina
+const EJEMPLOS_ALIST = [
+  {id:101,fecha:'2026-05-18',maquina:'Automática',tipo:'Inicial',tiempo:22,responsable:'Carlos Ríos'},
+  {id:102,fecha:'2026-05-18',maquina:'Automática',tipo:'Final',tiempo:18,responsable:'Carlos Ríos'},
+  {id:103,fecha:'2026-05-19',maquina:'Limón',tipo:'Inicial',tiempo:25,responsable:'Ana Zapata'},
+  {id:104,fecha:'2026-05-19',maquina:'Limón',tipo:'Final',tiempo:20,responsable:'Ana Zapata'},
+  {id:105,fecha:'2026-05-20',maquina:'Zumex 1',tipo:'Inicial',tiempo:15,responsable:'Julián Vélez'},
+  {id:106,fecha:'2026-05-20',maquina:'Zumex 1',tipo:'Final',tiempo:14,responsable:'Julián Vélez'},
+  {id:107,fecha:'2026-05-21',maquina:'Zumex 2',tipo:'Inicial',tiempo:19,responsable:'Carlos Ríos'},
+  {id:108,fecha:'2026-05-21',maquina:'Zumex 2',tipo:'Final',tiempo:16,responsable:'Carlos Ríos'},
+  {id:109,fecha:'2026-05-22',maquina:'Zumex 3',tipo:'Inicial',tiempo:21,responsable:'Julián Vélez'},
+  {id:110,fecha:'2026-05-23',maquina:'Zumex 3',tipo:'Final',tiempo:17,responsable:'Ana Zapata'},
+];
+
+function cargar(key, ejemplos){
+  try{
+    const data = localStorage.getItem(key);
+    if(data) return JSON.parse(data);
+  }catch(e){ console.warn('localStorage no disponible:', e); }
+  return JSON.parse(JSON.stringify(ejemplos));
+}
+function guardar(key, data){
+  try{ localStorage.setItem(key, JSON.stringify(data)); }
+  catch(e){ console.warn('No se pudo guardar en localStorage:', e); }
+}
+
+let registros = cargar(STORAGE_KEY, EJEMPLOS);
+let alistamientos = cargar(STORAGE_KEY_ALIST, EJEMPLOS_ALIST);
+
+/* ============================================================
+   LISTA DE MÁQUINAS (para gráficas)
+   ============================================================ */
+const MAQUINAS_LISTA = ['Automática','Limón','Zumex 1','Zumex 2','Zumex 3'];
+
+/* ============================================================
+   UTILIDADES Y CÁLCULOS — TRANSFORMACIÓN
+   ============================================================ */
+const tiempoTotal = r => Number(r.tiempoTransf||0);
+const porLitro = r => r.litrosReal>0 ? tiempoTotal(r)/r.litrosReal : 0;
+const cumplimiento = r => r.litrosProy>0 ? (r.litrosReal/r.litrosProy*100) : 0;
+const fmt = (n,d=2)=> Number(n).toLocaleString('es-CO',{minimumFractionDigits:d,maximumFractionDigits:d});
+const fmt0 = n => Number(n).toLocaleString('es-CO',{maximumFractionDigits:0});
+
+let filtros = {desde:'',hasta:'',materia:''};
+
+function registrosFiltrados(){
+  return registros.filter(r=>{
+    if(filtros.desde && r.fecha < filtros.desde) return false;
+    if(filtros.hasta && r.fecha > filtros.hasta) return false;
+    if(filtros.materia && r.materia !== filtros.materia) return false;
+    return true;
+  }).sort((a,b)=> a.fecha.localeCompare(b.fecha));
+}
+
+/* ============================================================
+   UTILIDADES Y CÁLCULOS — ALISTAMIENTO
+   ============================================================ */
+let filtrosAlist = {desde:'',hasta:'',maquina:'',tipo:''};
+
+function alistamientosFiltrados(){
+  return alistamientos.filter(r=>{
+    if(filtrosAlist.desde && r.fecha < filtrosAlist.desde) return false;
+    if(filtrosAlist.hasta && r.fecha > filtrosAlist.hasta) return false;
+    if(filtrosAlist.maquina && r.maquina !== filtrosAlist.maquina) return false;
+    if(filtrosAlist.tipo && r.tipo !== filtrosAlist.tipo) return false;
+    return true;
+  }).sort((a,b)=> a.fecha.localeCompare(b.fecha));
+}
+
+/* ============================================================
+   TOAST
+   ============================================================ */
+let toastTimer;
+function toast(msg,tipo='ok'){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'show '+tipo;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=> t.className = '', 3000);
+}
+
+/* ============================================================
+   TOGGLE: SUB-MÓDULO LLENADO (SOLO LIMÓN)
+   ============================================================ */
+function toggleLlenadoLimon(){
+  const materia = document.getElementById('fMateria').value;
+  const visible = materia === 'Limón';
+  document.getElementById('llenadoLimonSubhead').style.display = visible ? 'flex' : 'none';
+  document.getElementById('llenadoLimonField').style.display = visible ? 'flex' : 'none';
+  if(!visible){ document.getElementById('fLlenadoLimonTiempo').value=''; }
+}
+
+/* ============================================================
+   PRODUCCIÓN: AGREGAR / ELIMINAR / LIMPIAR
+   ============================================================ */
+function agregarRegistro(){
+  const fecha = document.getElementById('fFecha').value;
+  const materia = document.getElementById('fMateria').value;
+  const proveedor = document.getElementById('fNombreProv').value.trim();
+  const tiempoProv = parseFloat(document.getElementById('fTiempoProv').value);
+  const tiempoPlanta = parseFloat(document.getElementById('fTiempoPlanta').value);
+  const tamano = document.getElementById('fTamano').value;
+  const estado = document.getElementById('fEstado').value;
+  const respRecep = document.getElementById('fRespRecep').value.trim();
+  const lavadoTiempo = parseFloat(document.getElementById('fLavadoTiempo').value);
+  const lavadoResp1 = document.getElementById('fLavadoResp1').value.trim();
+  const lavadoResp2 = document.getElementById('fLavadoResp2').value.trim();
+  const canastillas = parseFloat(document.getElementById('fCanastillas').value);
+  const tiempoTransf = parseFloat(document.getElementById('fTiempoTransf').value);
+  const litrosReal = parseFloat(document.getElementById('fLitrosReal').value);
+  const litrosProy = parseFloat(document.getElementById('fLitrosProy').value);
+
+  if(!fecha){ return toast('La fecha es obligatoria.','err'); }
+  if(isNaN(Date.parse(fecha))){ return toast('La fecha no es válida.','err'); }
+  if(!proveedor){ return toast('Ingresa el nombre del proveedor.','err'); }
+  if(isNaN(tiempoProv) || tiempoProv<0){ return toast('El tiempo de proveedor no puede ser negativo.','err'); }
+  if(isNaN(tiempoPlanta) || tiempoPlanta<0){ return toast('El tiempo en planta no puede ser negativo.','err'); }
+  if(!tamano){ return toast('Selecciona el tamaño.','err'); }
+  if(!estado){ return toast('Selecciona el estado fitosanitario.','err'); }
+  if(!respRecep){ return toast('Ingresa el responsable de recepción.','err'); }
+  if(isNaN(lavadoTiempo) || lavadoTiempo<0){ return toast('El tiempo de lavado/transporte no puede ser negativo.','err'); }
+  if(!lavadoResp1){ return toast('Ingresa el nombre del Responsable 1 de lavado/transporte.','err'); }
+
+  let llenadoLimonTiempo = null;
+  if(materia === 'Limón'){
+    llenadoLimonTiempo = parseFloat(document.getElementById('fLlenadoLimonTiempo').value);
+    if(isNaN(llenadoLimonTiempo) || llenadoLimonTiempo<0){ return toast('El tiempo de llenado (Limón) no puede ser negativo.','err'); }
+  }
+
+  if(isNaN(canastillas) || canastillas<0){ return toast('La cantidad de canastillas no puede ser negativa.','err'); }
+  if(isNaN(tiempoTransf) || tiempoTransf<0){ return toast('El tiempo de transformación no puede ser negativo.','err'); }
+  if(isNaN(litrosReal) || litrosReal<0){ return toast('Los litros procesados (real) no pueden ser negativos.','err'); }
+  if(isNaN(litrosProy) || litrosProy<0){ return toast('Los litros proyectados no pueden ser negativos.','err'); }
+
+  registros.push({id:Date.now(),fecha,materia,proveedor,tiempoProv,tiempoPlanta,tamano,estado,respRecep,lavadoTiempo,lavadoResp1,lavadoResp2,llenadoLimonTiempo,canastillas,tiempoTransf,litrosReal,litrosProy});
+  guardar(STORAGE_KEY, registros);
+  renderProduccion();
+  limpiarForm();
+  toast('Registro agregado ✓','ok');
+}
+function eliminarRegistro(id){
+  registros = registros.filter(r=> r.id !== id);
+  guardar(STORAGE_KEY, registros);
+  renderProduccion();
+  toast('Registro eliminado.','ok');
+}
+function limpiarForm(){
+  ['fTiempoProv','fTiempoPlanta','fNombreProv','fRespRecep','fLavadoTiempo','fLavadoResp1','fLavadoResp2','fCanastillas','fTiempoTransf','fLitrosReal','fLitrosProy'].forEach(i=> document.getElementById(i).value='');
+  document.getElementById('fFecha').value = new Date().toISOString().slice(0,10);
+  document.getElementById('fTamano').value = 'Mediano';
+  document.getElementById('fEstado').value = 'Bueno';
+  document.getElementById('fMateria').value = 'Naranja';
+  toggleLlenadoLimon();
+}
+function aplicarFiltros(){
+  filtros.desde = document.getElementById('filDesde').value;
+  filtros.hasta = document.getElementById('filHasta').value;
+  filtros.materia = document.getElementById('filMateria').value;
+  renderProduccion();
+  toast('Filtros aplicados.','ok');
+}
+function reiniciarFiltros(){
+  filtros = {desde:'',hasta:'',materia:''};
+  document.getElementById('filDesde').value='';
+  document.getElementById('filHasta').value='';
+  document.getElementById('filMateria').value='';
+  renderProduccion();
+  toast('Filtros reiniciados.','ok');
+}
+
+/* ============================================================
+   ALISTAMIENTO: AGREGAR / ELIMINAR / LIMPIAR
+   ============================================================ */
+function agregarAlistamiento(){
+  const fecha = document.getElementById('aFecha').value;
+  const maquina = document.getElementById('aMaquina').value;
+  const tipo = document.getElementById('aTipo').value;
+  const tiempo = parseFloat(document.getElementById('aTiempo').value);
+  const responsable = document.getElementById('aResponsable').value.trim();
+
+  if(!fecha){ return toast('La fecha es obligatoria.','err'); }
+  if(isNaN(Date.parse(fecha))){ return toast('La fecha no es válida.','err'); }
+  if(!maquina){ return toast('Selecciona la máquina.','err'); }
+  if(isNaN(tiempo) || tiempo<0){ return toast('El tiempo de alistamiento no puede ser negativo.','err'); }
+  if(!responsable){ return toast('Ingresa la persona responsable.','err'); }
+
+  alistamientos.push({id:Date.now(),fecha,maquina,tipo,tiempo,responsable});
+  guardar(STORAGE_KEY_ALIST, alistamientos);
+  renderAlistamiento();
+  limpiarFormAlist();
+  toast('Alistamiento agregado ✓','ok');
+}
+function eliminarAlistamiento(id){
+  alistamientos = alistamientos.filter(r=> r.id !== id);
+  guardar(STORAGE_KEY_ALIST, alistamientos);
+  renderAlistamiento();
+  toast('Registro de alistamiento eliminado.','ok');
+}
+function limpiarFormAlist(){
+  document.getElementById('aTiempo').value='';
+  document.getElementById('aResponsable').value='';
+  document.getElementById('aFecha').value = new Date().toISOString().slice(0,10);
+  document.getElementById('aMaquina').value = 'Automática';
+  document.getElementById('aTipo').value = 'Inicial';
+}
+function aplicarFiltrosAlist(){
+  filtrosAlist.desde = document.getElementById('filAlistDesde').value;
+  filtrosAlist.hasta = document.getElementById('filAlistHasta').value;
+  filtrosAlist.maquina = document.getElementById('filAlistMaquina').value;
+  filtrosAlist.tipo = document.getElementById('filAlistTipo').value;
+  renderAlistamiento();
+  toast('Filtros de alistamiento aplicados.','ok');
+}
+function reiniciarFiltrosAlist(){
+  filtrosAlist = {desde:'',hasta:'',maquina:'',tipo:''};
+  document.getElementById('filAlistDesde').value='';
+  document.getElementById('filAlistHasta').value='';
+  document.getElementById('filAlistMaquina').value='';
+  document.getElementById('filAlistTipo').value='';
+  renderAlistamiento();
+  toast('Filtros de alistamiento reiniciados.','ok');
+}
+
+/* ============================================================
+   KPIs — PRODUCCIÓN
+   ============================================================ */
+function renderKPIsProd(data){
+  const litrosTot = data.reduce((s,r)=>s+Number(r.litrosReal||0),0);
+  const litrosProyTot = data.reduce((s,r)=>s+Number(r.litrosProy||0),0);
+  const tiempoTot = data.reduce((s,r)=>s+tiempoTotal(r),0);
+  const promPorLitro = litrosTot>0 ? tiempoTot/litrosTot : 0;
+  const cumplProm = litrosProyTot>0 ? (litrosTot/litrosProyTot*100) : 0;
+
+  document.getElementById('kpiLitros').textContent = fmt0(litrosTot)+' L';
+  document.getElementById('kpiTiempo').textContent = fmt0(tiempoTot)+' min';
+  document.getElementById('kpiPorLitro').textContent = fmt(promPorLitro,3);
+  document.getElementById('kpiCumplimiento').textContent = data.length? fmt(cumplProm,1)+'%' : '–';
+
+  if(data.length){
+    const ordenados = [...data].sort((a,b)=> porLitro(a)-porLitro(b));
+    const mejor = ordenados[0], peor = ordenados[ordenados.length-1];
+    document.getElementById('kpiMejor').textContent = mejor.fecha;
+    document.getElementById('kpiMejorV').textContent = fmt(porLitro(mejor),3)+' min/L · '+mejor.materia;
+    document.getElementById('kpiPeor').textContent = peor.fecha;
+    document.getElementById('kpiPeorV').textContent = fmt(porLitro(peor),3)+' min/L · '+peor.materia;
+  }else{
+    document.getElementById('kpiMejor').textContent='–'; document.getElementById('kpiMejorV').textContent='';
+    document.getElementById('kpiPeor').textContent='–'; document.getElementById('kpiPeorV').textContent='';
+  }
+}
+
+/* ============================================================
+   TABLAS
+   ============================================================ */
+function renderTablaProd(data){
+  const tb = document.getElementById('tbody');
+  if(!data.length){
+    tb.innerHTML = '<tr><td colspan="19" class="empty">No hay registros para los filtros actuales.</td></tr>';
+    return;
+  }
+  const claseMat = m => ({'Naranja':'naranja','Limón':'limon','Mandarina':'mandarina','Otro':'otro'}[m]||'otro');
+  const claseTam = t => ({'Pequeño':'pequeno','Mediano':'mediano','Grande':'grande'}[t]||'mediano');
+  const claseEst = e => ({'Bueno':'bueno','Regular':'regular','Malo':'malo'}[e]||'bueno');
+  tb.innerHTML = data.map(r=>{
+    const c = cumplimiento(r);
+    const claseCumpl = c>=100 ? 'cumple' : 'nocumple';
+    return `
+    <tr>
+      <td>${r.fecha}</td>
+      <td><span class="tag ${claseMat(r.materia)}">${r.materia}</span></td>
+      <td>${r.proveedor}</td>
+      <td class="num">${fmt(r.tiempoProv,1)}</td>
+      <td class="num">${fmt(r.tiempoPlanta,1)}</td>
+      <td><span class="tag ${claseTam(r.tamano)}">${r.tamano}</span></td>
+      <td><span class="tag ${claseEst(r.estado)}">${r.estado}</span></td>
+      <td>${r.respRecep}</td>
+      <td class="num">${fmt(r.lavadoTiempo,1)}</td>
+      <td>${r.lavadoResp1}</td>
+      <td>${r.lavadoResp2 || '–'}</td>
+      <td class="num">${r.llenadoLimonTiempo!=null ? fmt(r.llenadoLimonTiempo,1) : '–'}</td>
+      <td class="num">${fmt0(r.canastillas)}</td>
+      <td class="num">${fmt(r.tiempoTransf,1)}</td>
+      <td class="num">${fmt0(r.litrosReal)}</td>
+      <td class="num">${fmt0(r.litrosProy)}</td>
+      <td><span class="tag ${claseCumpl}">${fmt(c,1)}%</span></td>
+      <td class="num">${fmt(porLitro(r),3)}</td>
+      <td><button class="del" title="Eliminar" onclick="eliminarRegistro(${r.id})">🗑</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function renderTablaAlist(data){
+  const tb = document.getElementById('tbodyAlist');
+  if(!data.length){
+    tb.innerHTML = '<tr><td colspan="6" class="empty">No hay registros de alistamiento para los filtros actuales.</td></tr>';
+    return;
+  }
+  tb.innerHTML = data.map(r=>`
+    <tr>
+      <td>${r.fecha}</td>
+      <td>${r.maquina}</td>
+      <td><span class="tag ${r.tipo==='Inicial'?'inicial':'final'}">${r.tipo==='Inicial'?'Inicial':'Final'}</span></td>
+      <td class="num">${fmt(r.tiempo,1)}</td>
+      <td>${r.responsable}</td>
+      <td><button class="del" title="Eliminar" onclick="eliminarAlistamiento(${r.id})">🗑</button></td>
+    </tr>`).join('');
+}
+
+/* ============================================================
+   GRÁFICAS — PRODUCCIÓN
+   ============================================================ */
+let charts = {};
+function destruir(k){ if(charts[k]){ charts[k].destroy(); delete charts[k]; } }
+
+function renderGraficasProd(data){
+  const labels = data.map(r=> r.fecha);
+
+  destruir('lineas');
+  charts.lineas = new Chart(document.getElementById('chLineas'),{
+    type:'line',
+    data:{labels,datasets:[
+      {label:'Tiempo total (min)',data:data.map(tiempoTotal),borderColor:'#F58220',backgroundColor:'rgba(245,130,32,.12)',tension:.3,fill:true,yAxisID:'y'},
+      {label:'Tiempo por litro (min/L)',data:data.map(porLitro),borderColor:'#4C9A52',backgroundColor:'rgba(76,154,82,.1)',tension:.3,yAxisID:'y1'}
+    ]},
+    options:{responsive:true,interaction:{mode:'index',intersect:false},
+      scales:{
+        y:{type:'linear',position:'left',title:{display:true,text:'min'}},
+        y1:{type:'linear',position:'right',grid:{drawOnChartArea:false},title:{display:true,text:'min/L'}}
+      }}
+  });
+
+  destruir('barras');
+  charts.barras = new Chart(document.getElementById('chBarras'),{
+    type:'bar',
+    data:{labels,datasets:[
+      {label:'Litros reales',data:data.map(r=>Number(r.litrosReal||0)),backgroundColor:'#4C9A52'},
+      {label:'Litros proyectados',data:data.map(r=>Number(r.litrosProy||0)),backgroundColor:'#F6C026'}
+    ]},
+    options:{responsive:true,scales:{y:{title:{display:true,text:'litros'}}}}
+  });
+
+  const litrosTot = data.reduce((s,r)=>s+Number(r.litrosReal||0),0);
+  const litrosProyTot = data.reduce((s,r)=>s+Number(r.litrosProy||0),0);
+  const deficit = Math.max(litrosProyTot - litrosTot, 0);
+  destruir('dona');
+  charts.dona = new Chart(document.getElementById('chDona'),{
+    type:'doughnut',
+    data:{labels:['Litros reales','Déficit vs. proyectado'],datasets:[{data:[litrosTot,deficit],backgroundColor:['#4C9A52','#FCE9E6'],borderWidth:2,borderColor:'#fff'}]},
+    options:{responsive:true,plugins:{legend:{position:'bottom'},
+      tooltip:{callbacks:{label:c=>{
+        const tot=litrosTot+deficit; const p=tot?(c.parsed/tot*100):0;
+        return `${c.label}: ${fmt0(c.parsed)} L (${fmt(p,1)}%)`;
+      }}}}}
+  });
+
+  const mats = ['Naranja','Limón','Mandarina','Otro'];
+  const promMat = mats.map(m=>{
+    const subset = data.filter(r=>r.materia===m);
+    if(!subset.length) return 0;
+    return subset.reduce((s,r)=>s+porLitro(r),0)/subset.length;
+  });
+  destruir('materia');
+  charts.materia = new Chart(document.getElementById('chMateria'),{
+    type:'bar',
+    data:{labels:mats,datasets:[{label:'Promedio min/L',data:promMat,
+      backgroundColor:['#F58220','#F6C026','#E8842B','#6B7280']}]},
+    options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{title:{display:true,text:'min/L'}}}}
+  });
+}
+
+function renderRanking(data){
+  const good = document.getElementById('rankGood');
+  const bad = document.getElementById('rankBad');
+  if(!data.length){ good.innerHTML=bad.innerHTML='<li class="empty" style="background:none">Sin datos.</li>'; return; }
+  const ord = [...data].sort((a,b)=> porLitro(a)-porLitro(b));
+  const top = ord.slice(0,3);
+  const bottom = ord.slice(-3).reverse();
+  good.innerHTML = top.map(r=>`<li class="good"><span>${r.fecha} · ${r.materia}</span><span class="v">${fmt(porLitro(r),3)} min/L</span></li>`).join('');
+  bad.innerHTML = bottom.map(r=>`<li class="bad"><span>${r.fecha} · ${r.materia}</span><span class="v">${fmt(porLitro(r),3)} min/L</span></li>`).join('');
+}
+
+/* ============================================================
+   GRÁFICAS — ALISTAMIENTO
+   ============================================================ */
+function renderGraficasAlist(data){
+  const maquinasList = MAQUINAS_LISTA;
+
+  const promIniPorMaq = maquinasList.map(m=>{
+    const arr = data.filter(r=>r.maquina===m && r.tipo==='Inicial').map(r=>r.tiempo);
+    return arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : 0;
+  });
+  const promFinPorMaq = maquinasList.map(m=>{
+    const arr = data.filter(r=>r.maquina===m && r.tipo==='Final').map(r=>r.tiempo);
+    return arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : 0;
+  });
+  destruir('alistMaquina');
+  charts.alistMaquina = new Chart(document.getElementById('chAlistMaquina'),{
+    type:'bar',
+    data:{labels:maquinasList,datasets:[
+      {label:'Alistamiento inicial',data:promIniPorMaq,backgroundColor:'#3E7CB1'},
+      {label:'Alistamiento final',data:promFinPorMaq,backgroundColor:'#F58220'}
+    ]},
+    options:{responsive:true,scales:{y:{title:{display:true,text:'min promedio'}}}}
+  });
+
+  const fechasUnicas = [...new Set(data.map(r=>r.fecha))].sort();
+  const tiempoPorFecha = fechasUnicas.map(f=> data.filter(r=>r.fecha===f).reduce((s,r)=>s+r.tiempo,0));
+  destruir('alistTendencia');
+  charts.alistTendencia = new Chart(document.getElementById('chAlistTendencia'),{
+    type:'line',
+    data:{labels:fechasUnicas,datasets:[{label:'Tiempo total de alistamiento (min)',data:tiempoPorFecha,
+      borderColor:'#3E7CB1',backgroundColor:'rgba(62,124,177,.12)',tension:.3,fill:true}]},
+    options:{responsive:true,scales:{y:{title:{display:true,text:'min'}}}}
+  });
+
+  const conteoMaq = maquinasList.map(m=> data.filter(r=>r.maquina===m).length);
+  destruir('alistDona');
+  charts.alistDona = new Chart(document.getElementById('chAlistDona'),{
+    type:'doughnut',
+    data:{labels:maquinasList,datasets:[{data:conteoMaq,
+      backgroundColor:['#F58220','#F6C026','#4C9A52','#3E7CB1','#6B7280'],borderWidth:2,borderColor:'#fff'}]},
+    options:{responsive:true,plugins:{legend:{position:'bottom'}}}
+  });
+
+  const respList = [...new Set(data.map(r=>r.responsable))];
+  const promResp = respList.map(p=>{
+    const arr = data.filter(r=>r.responsable===p).map(r=>r.tiempo);
+    return arr.reduce((a,b)=>a+b,0)/arr.length;
+  });
+  destruir('alistResp');
+  charts.alistResp = new Chart(document.getElementById('chAlistResp'),{
+    type:'bar',
+    data:{labels:respList,datasets:[{label:'Promedio min por registro',data:promResp,backgroundColor:'#4C9A52'}]},
+    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{title:{display:true,text:'min promedio'}}}}
+  });
+}
+
+/* ============================================================
+   RENDER GENERAL
+   ============================================================ */
+function renderProduccion(){
+  const data = registrosFiltrados();
+  renderKPIsProd(data);
+  renderTablaProd(data);
+  renderGraficasProd(data);
+  renderRanking(data);
+}
+function renderAlistamiento(){
+  const data = alistamientosFiltrados();
+  renderTablaAlist(data);
+  renderGraficasAlist(data);
+}
+
+/* ============================================================
+   INICIO
+   ============================================================ */
+limpiarForm();
+limpiarFormAlist();
+renderProduccion();
+renderAlistamiento();
+</script>
+</body>
+</html>
