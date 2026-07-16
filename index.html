@@ -51,6 +51,19 @@ header.main p{color:var(--muted);font-size:.95rem;margin-top:2px}
 .subsection-title .badge-sm.alist{background:var(--azul-soft);color:#2C5A80}
 .subsection-title .badge-sm.prod{background:var(--verde-soft);color:#2E6B33}
 
+/* ===== Sub-pestañas dentro de Gráficas ===== */
+.subtabs-nav{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 22px}
+.subtab-btn{background:var(--gris-soft);color:var(--muted);border:none;padding:9px 16px;border-radius:20px;font-family:inherit;font-size:.85rem;font-weight:600;cursor:pointer;transition:all .15s}
+.subtab-btn:hover{filter:brightness(.96)}
+.subtab-btn.active{background:var(--ink);color:#fff}
+.subtab-content{display:none}
+.subtab-content.active{display:block}
+
+/* ===== Resumen ejecutivo ===== */
+.notas-box{width:100%;min-height:140px;padding:14px 16px;border:1px solid var(--line);border-radius:14px;font-family:inherit;font-size:.92rem;line-height:1.6;color:var(--ink);resize:vertical;background:#fff}
+.notas-box:focus{outline:none;border-color:var(--naranja)}
+.notas-hint{font-size:.76rem;color:var(--muted);margin-top:6px}
+
 /* ===== Secciones (separadores) ===== */
 .section-title{display:flex;align-items:center;gap:12px;margin:34px 0 16px}
 .section-title h2{font-size:1.3rem;letter-spacing:-.4px}
@@ -223,34 +236,6 @@ td.num{text-align:right;font-variant-numeric:tabular-nums}
     </div>
   </section>
 
-  <!-- Filtros alistamiento -->
-  <section class="panel">
-    <h2><span class="dot blue"></span>Filtros de alistamiento</h2>
-    <div class="filters">
-      <div class="field"><label>Desde</label><input type="date" id="filAlistDesde"></div>
-      <div class="field"><label>Hasta</label><input type="date" id="filAlistHasta"></div>
-      <div class="field"><label>Máquina</label>
-        <select id="filAlistMaquina">
-          <option value="">Todas</option>
-          <option value="Automática">Automática</option>
-          <option value="Limón">Limón</option>
-          <option value="Zumex 1">Zumex 1</option>
-          <option value="Zumex 2">Zumex 2</option>
-          <option value="Zumex 3">Zumex 3</option>
-        </select>
-      </div>
-      <div class="field"><label>Tipo</label>
-        <select id="filAlistTipo">
-          <option value="">Ambos</option>
-          <option value="Inicial">Alistamiento inicial</option>
-          <option value="Final">Alistamiento final</option>
-        </select>
-      </div>
-      <button class="btn btn-primary blue" onclick="aplicarFiltrosAlist()">Aplicar</button>
-      <button class="btn btn-ghost" onclick="reiniciarFiltrosAlist()">Reiniciar filtros</button>
-    </div>
-  </section>
-
   <!-- Tabla alistamiento -->
   <section class="panel">
     <h2><span class="dot blue"></span>Registros de alistamiento</h2>
@@ -342,26 +327,6 @@ td.num{text-align:right;font-variant-numeric:tabular-nums}
     </div>
   </section>
 
-  <!-- Filtros producción -->
-  <section class="panel">
-    <h2><span class="dot" style="background:var(--verde)"></span>Filtros</h2>
-    <div class="filters">
-      <div class="field"><label>Desde</label><input type="date" id="filDesde"></div>
-      <div class="field"><label>Hasta</label><input type="date" id="filHasta"></div>
-      <div class="field"><label>Materia prima</label>
-        <select id="filMateria">
-          <option value="">Todas</option>
-          <option value="Naranja">Naranja</option>
-          <option value="Limón">Limón</option>
-          <option value="Mandarina">Mandarina</option>
-          <option value="Otro">Otro</option>
-        </select>
-      </div>
-      <button class="btn btn-primary" onclick="aplicarFiltros()">Aplicar</button>
-      <button class="btn btn-ghost" onclick="reiniciarFiltros()">Reiniciar filtros</button>
-    </div>
-  </section>
-
   <!-- Tabla única de registros de producción -->
   <section class="panel">
     <h2><span class="dot" style="background:var(--amarillo)"></span>Registros de producción</h2>
@@ -385,38 +350,126 @@ td.num{text-align:right;font-variant-numeric:tabular-nums}
   </div><!-- /tabRegistros -->
 
   <!-- =========================================================
-       BLOQUE 3: GRÁFICAS (pestaña separada, organizada por proceso)
+       BLOQUE 3: GRÁFICAS (pestaña separada, 5 sub-secciones)
        ========================================================= -->
   <div id="tabGraficas" class="tab-content">
 
-  <div class="subsection-title">
-    <h3>Gráficas de Alistamiento</h3>
-    <span class="badge-sm alist">Por máquina</span>
-    <div class="line"></div>
-  </div>
-  <div class="charts-grid">
-    <div class="chart-box"><h3>Tiempo promedio de alistamiento por máquina</h3><canvas id="chAlistMaquina"></canvas></div>
-    <div class="chart-box"><h3>Tendencia diaria del tiempo de alistamiento</h3><canvas id="chAlistTendencia"></canvas></div>
-    <div class="chart-box"><h3>Distribución de registros por máquina</h3><canvas id="chAlistDona"></canvas></div>
-    <div class="chart-box"><h3>Tiempo promedio por responsable (alistamiento)</h3><canvas id="chAlistResp"></canvas></div>
+  <!-- Sub-pestañas -->
+  <div class="subtabs-nav">
+    <button class="subtab-btn active" id="subtabBtnGeneral" onclick="switchGraficaSubTab('general')">📝 Resumen general</button>
+    <button class="subtab-btn" id="subtabBtnAlistamiento" onclick="switchGraficaSubTab('alistamiento')">🔧 Alistamientos</button>
+    <button class="subtab-btn" id="subtabBtnLimon" onclick="switchGraficaSubTab('limon')">🍋 Producción · Limón</button>
+    <button class="subtab-btn" id="subtabBtnNaranja" onclick="switchGraficaSubTab('naranja')">🍊 Producción · Naranja</button>
+    <button class="subtab-btn" id="subtabBtnMandarina" onclick="switchGraficaSubTab('mandarina')">🟠 Producción · Mandarina</button>
   </div>
 
-  <div class="subsection-title">
-    <h3>Gráficas de Producción</h3>
-    <span class="badge-sm prod">Recepción · Transformación</span>
-    <div class="line"></div>
+  <!-- Filtros de producción compartidos (aplican a Resumen general y a las 3 secciones por producto) -->
+  <section class="panel">
+    <h2><span class="dot" style="background:var(--verde)"></span>Filtros de producción (fecha)</h2>
+    <div class="filters">
+      <div class="field"><label>Desde</label><input type="date" id="filDesde"></div>
+      <div class="field"><label>Hasta</label><input type="date" id="filHasta"></div>
+      <button class="btn btn-primary" onclick="aplicarFiltros()">Aplicar</button>
+      <button class="btn btn-ghost" onclick="reiniciarFiltros()">Reiniciar filtros</button>
+    </div>
+  </section>
+
+  <!-- ============ 1. RESUMEN GENERAL ============ -->
+  <div id="subGeneral" class="subtab-content active">
+    <div class="charts-grid">
+      <div class="chart-box"><h3>Tiempo promedio por litro según materia prima</h3><canvas id="chMateria"></canvas></div>
+      <div class="chart-box"><h3>Tiempo promedio de alistamiento por máquina</h3><canvas id="chAlistMaquinaResumen"></canvas></div>
+      <div class="chart-box">
+        <h3>Notas del resumen ejecutivo</h3>
+        <textarea class="notas-box" id="resumenNotas" placeholder="Escribe aquí las observaciones, conclusiones o puntos clave del período..."></textarea>
+        <p class="notas-hint">Se guarda automáticamente en este navegador y se incluye en el informe PDF.</p>
+      </div>
+    </div>
   </div>
-  <div class="charts-grid">
-    <div class="chart-box"><h3>Tendencia diaria: tiempo total y por litro (transformación)</h3><canvas id="chLineas"></canvas></div>
-    <div class="chart-box"><h3>Litros reales vs. proyectados por día</h3><canvas id="chBarras"></canvas></div>
-    <div class="chart-box"><h3>Cumplimiento acumulado: litros reales vs. déficit</h3><canvas id="chDona"></canvas></div>
-    <div class="chart-box"><h3>Tiempo promedio por litro según materia prima</h3><canvas id="chMateria"></canvas></div>
-    <div class="chart-box" style="grid-column:1/-1">
-      <h3>Ranking de eficiencia diaria (transformación)</h3>
-      <p class="rank-sub">Menor tiempo por litro = mayor eficiencia.</p>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:22px">
-        <div><strong style="font-size:.85rem;color:var(--verde)">Días más eficientes</strong><ul class="rank-list" id="rankGood"></ul></div>
-        <div><strong style="font-size:.85rem;color:#C0392B">Días menos eficientes</strong><ul class="rank-list" id="rankBad"></ul></div>
+
+  <!-- ============ 2. ALISTAMIENTOS ============ -->
+  <div id="subAlistamiento" class="subtab-content">
+    <section class="panel">
+      <h2><span class="dot blue"></span>Filtros de alistamiento</h2>
+      <div class="filters">
+        <div class="field"><label>Desde</label><input type="date" id="filAlistDesde"></div>
+        <div class="field"><label>Hasta</label><input type="date" id="filAlistHasta"></div>
+        <div class="field"><label>Máquina</label>
+          <select id="filAlistMaquina">
+            <option value="">Todas</option>
+            <option value="Automática">Automática</option>
+            <option value="Limón">Limón</option>
+            <option value="Zumex 1">Zumex 1</option>
+            <option value="Zumex 2">Zumex 2</option>
+            <option value="Zumex 3">Zumex 3</option>
+          </select>
+        </div>
+        <div class="field"><label>Tipo</label>
+          <select id="filAlistTipo">
+            <option value="">Ambos</option>
+            <option value="Inicial">Alistamiento inicial</option>
+            <option value="Final">Alistamiento final</option>
+          </select>
+        </div>
+        <button class="btn btn-primary blue" onclick="aplicarFiltrosAlist()">Aplicar</button>
+        <button class="btn btn-ghost" onclick="reiniciarFiltrosAlist()">Reiniciar filtros</button>
+      </div>
+    </section>
+    <div class="charts-grid">
+      <div class="chart-box"><h3>Tiempo promedio de alistamiento por máquina</h3><canvas id="chAlistMaquina"></canvas></div>
+      <div class="chart-box"><h3>Tendencia diaria del tiempo de alistamiento</h3><canvas id="chAlistTendencia"></canvas></div>
+      <div class="chart-box"><h3>Distribución de registros por máquina</h3><canvas id="chAlistDona"></canvas></div>
+      <div class="chart-box"><h3>Tiempo promedio por responsable (alistamiento)</h3><canvas id="chAlistResp"></canvas></div>
+    </div>
+  </div>
+
+  <!-- ============ 3. PRODUCCIÓN · LIMÓN ============ -->
+  <div id="subLimon" class="subtab-content">
+    <div class="charts-grid">
+      <div class="chart-box"><h3>Tendencia diaria: tiempo total y por litro — Limón</h3><canvas id="chLineasLimon"></canvas></div>
+      <div class="chart-box"><h3>Litros reales vs. proyectados por día — Limón</h3><canvas id="chBarrasLimon"></canvas></div>
+      <div class="chart-box"><h3>Cumplimiento acumulado — Limón</h3><canvas id="chDonaLimon"></canvas></div>
+      <div class="chart-box">
+        <h3>Ranking de eficiencia diaria — Limón</h3>
+        <p class="rank-sub">Menor tiempo por litro = mayor eficiencia.</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:22px">
+          <div><strong style="font-size:.85rem;color:var(--verde)">Días más eficientes</strong><ul class="rank-list" id="rankGoodLimon"></ul></div>
+          <div><strong style="font-size:.85rem;color:#C0392B">Días menos eficientes</strong><ul class="rank-list" id="rankBadLimon"></ul></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 4. PRODUCCIÓN · NARANJA ============ -->
+  <div id="subNaranja" class="subtab-content">
+    <div class="charts-grid">
+      <div class="chart-box"><h3>Tendencia diaria: tiempo total y por litro — Naranja</h3><canvas id="chLineasNaranja"></canvas></div>
+      <div class="chart-box"><h3>Litros reales vs. proyectados por día — Naranja</h3><canvas id="chBarrasNaranja"></canvas></div>
+      <div class="chart-box"><h3>Cumplimiento acumulado — Naranja</h3><canvas id="chDonaNaranja"></canvas></div>
+      <div class="chart-box">
+        <h3>Ranking de eficiencia diaria — Naranja</h3>
+        <p class="rank-sub">Menor tiempo por litro = mayor eficiencia.</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:22px">
+          <div><strong style="font-size:.85rem;color:var(--verde)">Días más eficientes</strong><ul class="rank-list" id="rankGoodNaranja"></ul></div>
+          <div><strong style="font-size:.85rem;color:#C0392B">Días menos eficientes</strong><ul class="rank-list" id="rankBadNaranja"></ul></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 5. PRODUCCIÓN · MANDARINA ============ -->
+  <div id="subMandarina" class="subtab-content">
+    <div class="charts-grid">
+      <div class="chart-box"><h3>Tendencia diaria: tiempo total y por litro — Mandarina</h3><canvas id="chLineasMandarina"></canvas></div>
+      <div class="chart-box"><h3>Litros reales vs. proyectados por día — Mandarina</h3><canvas id="chBarrasMandarina"></canvas></div>
+      <div class="chart-box"><h3>Cumplimiento acumulado — Mandarina</h3><canvas id="chDonaMandarina"></canvas></div>
+      <div class="chart-box">
+        <h3>Ranking de eficiencia diaria — Mandarina</h3>
+        <p class="rank-sub">Menor tiempo por litro = mayor eficiencia.</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:22px">
+          <div><strong style="font-size:.85rem;color:var(--verde)">Días más eficientes</strong><ul class="rank-list" id="rankGoodMandarina"></ul></div>
+          <div><strong style="font-size:.85rem;color:#C0392B">Días menos eficientes</strong><ul class="rank-list" id="rankBadMandarina"></ul></div>
+        </div>
       </div>
     </div>
   </div>
@@ -433,6 +486,7 @@ td.num{text-align:right;font-variant-numeric:tabular-nums}
    ============================================================ */
 const STORAGE_KEY = 'zumo_citricos_registros';
 const STORAGE_KEY_ALIST = 'zumo_citricos_alistamientos';
+const STORAGE_KEY_NOTAS = 'zumo_citricos_resumen_notas';
 
 // Datos de ejemplo — registros de producción (recepción + lavado/transporte + llenado limón + transformación)
 const EJEMPLOS = [
@@ -496,13 +550,12 @@ function contrastColor(hex){
   return luminance > 0.6 ? '#22262B' : '#ffffff';
 }
 
-let filtros = {desde:'',hasta:'',materia:''};
+let filtros = {desde:'',hasta:''};
 
 function registrosFiltrados(){
   return registros.filter(r=>{
     if(filtros.desde && r.fecha < filtros.desde) return false;
     if(filtros.hasta && r.fecha > filtros.hasta) return false;
-    if(filtros.materia && r.materia !== filtros.materia) return false;
     return true;
   }).sort((a,b)=> a.fecha.localeCompare(b.fecha));
 }
@@ -542,11 +595,17 @@ async function generarInformePDF(){
   btn.disabled = true;
   btn.textContent = '⏳ Generando...';
 
+  // Guardar estado actual de navegación para restaurarlo al terminar
+  const estabaEnRegistros = document.getElementById('tabRegistros').classList.contains('active');
+  const subtabActivo = SUBTABS_GRAFICAS.find(s=> document.getElementById('sub'+capitalizar(s)).classList.contains('active')) || 'general';
+
   try{
-    // Asegurar que los gráficos estén visibles y correctamente dimensionados antes de capturarlos
-    const estabaEnRegistros = document.getElementById('tabRegistros').classList.contains('active');
+    // Mostrar temporalmente TODAS las sub-secciones (aunque estén "inactivas") para que
+    // sus gráficos tengan tamaño real y se puedan capturar como imagen.
     switchTab('graficas');
-    await new Promise(res=> setTimeout(res, 200));
+    await new Promise(res=> setTimeout(res, 150));
+    SUBTABS_GRAFICAS.forEach(s=> document.getElementById('sub'+capitalizar(s)).style.display = 'block');
+    await new Promise(res=> setTimeout(res, 150));
     Object.values(charts).forEach(c=> c && c.resize());
     await new Promise(res=> setTimeout(res, 200));
 
@@ -573,9 +632,26 @@ async function generarInformePDF(){
     doc.line(margin, y, pageWidth-margin, y);
     y += 8;
 
+    // Notas del resumen ejecutivo (si el usuario escribió algo)
+    const notas = (document.getElementById('resumenNotas').value || '').trim();
+    if(notas){
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(12);
+      doc.text('Notas del resumen ejecutivo', margin, y);
+      y += 6;
+      doc.setFont('helvetica','normal');
+      doc.setFontSize(10);
+      const lineas = doc.splitTextToSize(notas, pageWidth - margin*2);
+      doc.text(lineas, margin, y);
+      y += lineas.length * 4.6 + 6;
+    }
+
     const secciones = [
+      { titulo:'Resumen General', keys:['materia','alistMaquinaResumen'] },
       { titulo:'Gráficas de Alistamiento', keys:['alistMaquina','alistTendencia','alistDona','alistResp'] },
-      { titulo:'Gráficas de Producción', keys:['lineas','barras','dona','materia'] }
+      { titulo:'Producción · Limón', keys:['lineasLimon','barrasLimon','donaLimon'] },
+      { titulo:'Producción · Naranja', keys:['lineasNaranja','barrasNaranja','donaNaranja'] },
+      { titulo:'Producción · Mandarina', keys:['lineasMandarina','barrasMandarina','donaMandarina'] }
     ];
 
     const gap = 6;
@@ -608,16 +684,34 @@ async function generarInformePDF(){
     const nombreArchivo = 'informe_produccion_' + new Date().toISOString().slice(0,10) + '.pdf';
     doc.save(nombreArchivo);
 
-    if(estabaEnRegistros){ switchTab('registros'); }
     toast('Informe PDF generado ✓','ok');
   }catch(e){
     console.error('Error generando el PDF:', e);
     toast('No se pudo generar el PDF. Revisa la consola.','err');
   }finally{
+    // Restaurar la navegación tal como estaba antes de generar el informe
+    SUBTABS_GRAFICAS.forEach(s=> document.getElementById('sub'+capitalizar(s)).style.display = '');
+    switchGraficaSubTab(subtabActivo);
+    if(estabaEnRegistros){ switchTab('registros'); }
     btn.disabled = false;
     btn.textContent = '📄 Generar informe PDF';
   }
 }
+
+/* ============================================================
+   SUB-PESTAÑAS DE GRÁFICAS
+   ============================================================ */
+const SUBTABS_GRAFICAS = ['general','alistamiento','limon','naranja','mandarina'];
+function switchGraficaSubTab(sub){
+  SUBTABS_GRAFICAS.forEach(s=>{
+    const esta = s === sub;
+    document.getElementById('sub'+capitalizar(s)).classList.toggle('active', esta);
+    document.getElementById('subtabBtn'+capitalizar(s)).classList.toggle('active', esta);
+  });
+  // Redimensionar los gráficos de la sub-pestaña recién mostrada
+  setTimeout(()=>{ Object.values(charts).forEach(c=> c && c.resize()); }, 0);
+}
+function capitalizar(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
 
 /* ============================================================
    PESTAÑAS
@@ -710,15 +804,13 @@ function limpiarForm(){
 function aplicarFiltros(){
   filtros.desde = document.getElementById('filDesde').value;
   filtros.hasta = document.getElementById('filHasta').value;
-  filtros.materia = document.getElementById('filMateria').value;
   renderProduccion();
   toast('Filtros aplicados.','ok');
 }
 function reiniciarFiltros(){
-  filtros = {desde:'',hasta:'',materia:''};
+  filtros = {desde:'',hasta:''};
   document.getElementById('filDesde').value='';
   document.getElementById('filHasta').value='';
-  document.getElementById('filMateria').value='';
   renderProduccion();
   toast('Filtros reiniciados.','ok');
 }
@@ -868,70 +960,7 @@ let charts = {};
 Chart.register(ChartDataLabels);
 function destruir(k){ if(charts[k]){ charts[k].destroy(); delete charts[k]; } }
 
-function renderGraficasProd(data){
-  const labels = data.map(r=> r.fecha);
-
-  destruir('lineas');
-  charts.lineas = new Chart(document.getElementById('chLineas'),{
-    type:'line',
-    data:{labels,datasets:[
-      {label:'Tiempo total (min)',data:data.map(tiempoTotal),borderColor:'#F58220',backgroundColor:'rgba(245,130,32,.12)',tension:.3,fill:true,yAxisID:'y'},
-      {label:'Tiempo por litro (min/L)',data:data.map(porLitro),borderColor:'#4C9A52',backgroundColor:'rgba(76,154,82,.1)',tension:.3,yAxisID:'y1'}
-    ]},
-    options:{responsive:true,interaction:{mode:'index',intersect:false},
-      layout:{padding:{top:22,bottom:6}},
-      plugins:{datalabels:{
-        color:(ctx)=> ctx.dataset.borderColor,
-        align:(ctx)=> ctx.dataset.yAxisID==='y1' ? 'bottom' : 'top',
-        anchor:'end',clamp:true,
-        font:{size:10,weight:'600'},
-        formatter:(v,ctx)=> ctx.dataset.yAxisID==='y1' ? fmt(v,3) : fmt0(v)
-      }},
-      scales:{
-        y:{type:'linear',position:'left',title:{display:true,text:'min'}},
-        y1:{type:'linear',position:'right',grid:{drawOnChartArea:false},title:{display:true,text:'min/L'}}
-      }}
-  });
-
-  destruir('barras');
-  charts.barras = new Chart(document.getElementById('chBarras'),{
-    type:'bar',
-    data:{labels,datasets:[
-      {label:'Litros reales',data:data.map(r=>Number(r.litrosReal||0)),backgroundColor:'#4C9A52'},
-      {label:'Litros proyectados',data:data.map(r=>Number(r.litrosProy||0)),backgroundColor:'#F6C026'}
-    ]},
-    options:{responsive:true,
-      layout:{padding:{top:22}},
-      plugins:{datalabels:{
-        color:'#22262B',align:'top',anchor:'end',clamp:true,font:{size:10,weight:'600'},
-        formatter:v=> v>0? fmt0(v) : ''
-      }},
-      scales:{y:{title:{display:true,text:'litros'}}}}
-  });
-
-  const litrosTot = data.reduce((s,r)=>s+Number(r.litrosReal||0),0);
-  const litrosProyTot = data.reduce((s,r)=>s+Number(r.litrosProy||0),0);
-  const deficit = Math.max(litrosProyTot - litrosTot, 0);
-  destruir('dona');
-  charts.dona = new Chart(document.getElementById('chDona'),{
-    type:'doughnut',
-    data:{labels:['Litros reales','Déficit vs. proyectado'],datasets:[{data:[litrosTot,deficit],backgroundColor:['#4C9A52','#FCE9E6'],borderWidth:2,borderColor:'#fff'}]},
-    options:{responsive:true,plugins:{legend:{position:'bottom'},
-      datalabels:{
-        color:(ctx)=> contrastColor(ctx.dataset.backgroundColor[ctx.dataIndex]),
-        font:{size:11,weight:'700'},
-        formatter:(v,ctx)=>{
-          const tot = ctx.dataset.data.reduce((a,b)=>a+b,0);
-          const p = tot? (v/tot*100):0;
-          return v>0 ? [fmt0(v)+' L', '('+fmt(p,1)+'%)'] : '';
-        }
-      },
-      tooltip:{callbacks:{label:c=>{
-        const tot=litrosTot+deficit; const p=tot?(c.parsed/tot*100):0;
-        return `${c.label}: ${fmt0(c.parsed)} L (${fmt(p,1)}%)`;
-      }}}}}
-  });
-
+function renderGraficaResumen(data){
   const mats = ['Naranja','Limón','Mandarina','Otro'];
   const promMat = mats.map(m=>{
     const subset = data.filter(r=>r.materia===m);
@@ -954,15 +983,85 @@ function renderGraficasProd(data){
   });
 }
 
-function renderRanking(data){
-  const good = document.getElementById('rankGood');
-  const bad = document.getElementById('rankBad');
+// Gráficas de producción para UN producto específico (Limón, Naranja o Mandarina).
+// sufijo debe coincidir con los ids de los canvas: chLineas+sufijo, chBarras+sufijo, chDona+sufijo
+function renderGraficasProductoMateria(materia, sufijo, dataCompleta){
+  const data = dataCompleta.filter(r=> r.materia === materia);
+  const labels = data.map(r=> r.fecha);
+
+  destruir('lineas'+sufijo);
+  charts['lineas'+sufijo] = new Chart(document.getElementById('chLineas'+sufijo),{
+    type:'line',
+    data:{labels,datasets:[
+      {label:'Tiempo total (min)',data:data.map(tiempoTotal),borderColor:'#F58220',backgroundColor:'rgba(245,130,32,.12)',tension:.3,fill:true,yAxisID:'y'},
+      {label:'Tiempo por litro (min/L)',data:data.map(porLitro),borderColor:'#4C9A52',backgroundColor:'rgba(76,154,82,.1)',tension:.3,yAxisID:'y1'}
+    ]},
+    options:{responsive:true,interaction:{mode:'index',intersect:false},
+      layout:{padding:{top:22,bottom:6}},
+      plugins:{datalabels:{
+        color:(ctx)=> ctx.dataset.borderColor,
+        align:(ctx)=> ctx.dataset.yAxisID==='y1' ? 'bottom' : 'top',
+        anchor:'end',clamp:true,
+        font:{size:10,weight:'600'},
+        formatter:(v,ctx)=> ctx.dataset.yAxisID==='y1' ? fmt(v,3) : fmt0(v)
+      }},
+      scales:{
+        y:{type:'linear',position:'left',title:{display:true,text:'min'}},
+        y1:{type:'linear',position:'right',grid:{drawOnChartArea:false},title:{display:true,text:'min/L'}}
+      }}
+  });
+
+  destruir('barras'+sufijo);
+  charts['barras'+sufijo] = new Chart(document.getElementById('chBarras'+sufijo),{
+    type:'bar',
+    data:{labels,datasets:[
+      {label:'Litros reales',data:data.map(r=>Number(r.litrosReal||0)),backgroundColor:'#4C9A52'},
+      {label:'Litros proyectados',data:data.map(r=>Number(r.litrosProy||0)),backgroundColor:'#F6C026'}
+    ]},
+    options:{responsive:true,
+      layout:{padding:{top:22}},
+      plugins:{datalabels:{
+        color:'#22262B',align:'top',anchor:'end',clamp:true,font:{size:10,weight:'600'},
+        formatter:v=> v>0? fmt0(v) : ''
+      }},
+      scales:{y:{title:{display:true,text:'litros'}}}}
+  });
+
+  const litrosTot = data.reduce((s,r)=>s+Number(r.litrosReal||0),0);
+  const litrosProyTot = data.reduce((s,r)=>s+Number(r.litrosProy||0),0);
+  const deficit = Math.max(litrosProyTot - litrosTot, 0);
+  destruir('dona'+sufijo);
+  charts['dona'+sufijo] = new Chart(document.getElementById('chDona'+sufijo),{
+    type:'doughnut',
+    data:{labels:['Litros reales','Déficit vs. proyectado'],datasets:[{data:[litrosTot,deficit],backgroundColor:['#4C9A52','#FCE9E6'],borderWidth:2,borderColor:'#fff'}]},
+    options:{responsive:true,plugins:{legend:{position:'bottom'},
+      datalabels:{
+        color:(ctx)=> contrastColor(ctx.dataset.backgroundColor[ctx.dataIndex]),
+        font:{size:11,weight:'700'},
+        formatter:(v,ctx)=>{
+          const tot = ctx.dataset.data.reduce((a,b)=>a+b,0);
+          const p = tot? (v/tot*100):0;
+          return v>0 ? [fmt0(v)+' L', '('+fmt(p,1)+'%)'] : '';
+        }
+      },
+      tooltip:{callbacks:{label:c=>{
+        const tot=litrosTot+deficit; const p=tot?(c.parsed/tot*100):0;
+        return `${c.label}: ${fmt0(c.parsed)} L (${fmt(p,1)}%)`;
+      }}}}}
+  });
+
+  renderRankingGenerico(data, 'rankGood'+sufijo, 'rankBad'+sufijo);
+}
+
+function renderRankingGenerico(data, idGood, idBad){
+  const good = document.getElementById(idGood);
+  const bad = document.getElementById(idBad);
   if(!data.length){ good.innerHTML=bad.innerHTML='<li class="empty" style="background:none">Sin datos.</li>'; return; }
   const ord = [...data].sort((a,b)=> porLitro(a)-porLitro(b));
   const top = ord.slice(0,3);
   const bottom = ord.slice(-3).reverse();
-  good.innerHTML = top.map(r=>`<li class="good"><span>${r.fecha} · ${r.materia}</span><span class="v">${fmt(porLitro(r),3)} min/L</span></li>`).join('');
-  bad.innerHTML = bottom.map(r=>`<li class="bad"><span>${r.fecha} · ${r.materia}</span><span class="v">${fmt(porLitro(r),3)} min/L</span></li>`).join('');
+  good.innerHTML = top.map(r=>`<li class="good"><span>${r.fecha}</span><span class="v">${fmt(porLitro(r),3)} min/L</span></li>`).join('');
+  bad.innerHTML = bottom.map(r=>`<li class="bad"><span>${r.fecha}</span><span class="v">${fmt(porLitro(r),3)} min/L</span></li>`).join('');
 }
 
 /* ============================================================
@@ -979,20 +1078,24 @@ function renderGraficasAlist(data){
     const arr = data.filter(r=>r.maquina===m && r.tipo==='Final').map(r=>r.tiempo);
     return arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : 0;
   });
-  destruir('alistMaquina');
-  charts.alistMaquina = new Chart(document.getElementById('chAlistMaquina'),{
-    type:'bar',
-    data:{labels:maquinasList,datasets:[
-      {label:'Alistamiento inicial',data:promIniPorMaq,backgroundColor:'#3E7CB1'},
-      {label:'Alistamiento final',data:promFinPorMaq,backgroundColor:'#F58220'}
-    ]},
-    options:{responsive:true,
-      plugins:{datalabels:{
-        color:'#fff',align:'center',anchor:'center',font:{size:11,weight:'700'},
-        formatter:v=> v>0? fmt(v,1) : ''
-      }},
-      scales:{y:{title:{display:true,text:'min promedio'}}}}
-  });
+  const crearGraficoAlistMaquina = (canvasId, chartKey) => {
+    destruir(chartKey);
+    charts[chartKey] = new Chart(document.getElementById(canvasId),{
+      type:'bar',
+      data:{labels:maquinasList,datasets:[
+        {label:'Alistamiento inicial',data:promIniPorMaq,backgroundColor:'#3E7CB1'},
+        {label:'Alistamiento final',data:promFinPorMaq,backgroundColor:'#F58220'}
+      ]},
+      options:{responsive:true,
+        plugins:{datalabels:{
+          color:'#fff',align:'center',anchor:'center',font:{size:11,weight:'700'},
+          formatter:v=> v>0? fmt(v,1) : ''
+        }},
+        scales:{y:{title:{display:true,text:'min promedio'}}}}
+    });
+  };
+  crearGraficoAlistMaquina('chAlistMaquina','alistMaquina');
+  crearGraficoAlistMaquina('chAlistMaquinaResumen','alistMaquinaResumen');
 
   const fechasUnicas = [...new Set(data.map(r=>r.fecha))].sort();
   const tiempoPorFecha = fechasUnicas.map(f=> data.filter(r=>r.fecha===f).reduce((s,r)=>s+r.tiempo,0));
@@ -1051,8 +1154,10 @@ function renderProduccion(){
   const data = registrosFiltrados();
   renderKPIsProd(data);
   renderTablaProd(data);
-  renderGraficasProd(data);
-  renderRanking(data);
+  renderGraficaResumen(data);
+  renderGraficasProductoMateria('Limón','Limon',data);
+  renderGraficasProductoMateria('Naranja','Naranja',data);
+  renderGraficasProductoMateria('Mandarina','Mandarina',data);
 }
 function renderAlistamiento(){
   const data = alistamientosFiltrados();
@@ -1067,6 +1172,16 @@ limpiarForm();
 limpiarFormAlist();
 renderProduccion();
 renderAlistamiento();
+
+// Resumen ejecutivo: cargar notas guardadas y auto-guardar al escribir
+try{
+  const notasGuardadas = localStorage.getItem(STORAGE_KEY_NOTAS);
+  if(notasGuardadas !== null) document.getElementById('resumenNotas').value = notasGuardadas;
+}catch(e){ console.warn('No se pudieron cargar las notas guardadas:', e); }
+document.getElementById('resumenNotas').addEventListener('input', (e)=>{
+  try{ localStorage.setItem(STORAGE_KEY_NOTAS, e.target.value); }
+  catch(err){ console.warn('No se pudieron guardar las notas:', err); }
+});
 </script>
 </body>
 </html>
