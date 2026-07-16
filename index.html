@@ -6,6 +6,8 @@
 <title>Dashboard de Tiempos de Producción – Planta de Zumo de Cítricos</title>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
 <style>
 /* ===== Variables de color (paleta cítrica) ===== */
 :root{
@@ -28,6 +30,26 @@ header.main h1{font-size:1.7rem;letter-spacing:-.5px}
 header.main p{color:var(--muted);font-size:.95rem;margin-top:2px}
 
 .wrap{max-width:1320px;margin:0 auto}
+
+/* ===== Pestañas principales ===== */
+.tabs-nav{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px;border-bottom:1px solid var(--line);padding-bottom:0}
+.tabs-nav-left{display:flex;gap:10px}
+.btn-pdf{background:var(--ink);color:#fff;padding:9px 18px;border:none;border-radius:10px;font-family:inherit;font-weight:600;font-size:.85rem;cursor:pointer;display:flex;align-items:center;gap:7px;margin-bottom:8px;transition:filter .15s,transform .1s}
+.btn-pdf:hover{filter:brightness(1.15)}
+.btn-pdf:active{transform:translateY(1px)}
+.btn-pdf:disabled{opacity:.6;cursor:wait}
+.tab-btn{background:none;border:none;padding:12px 20px;font-family:inherit;font-size:.95rem;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent;transition:color .15s,border-color .15s;display:flex;align-items:center;gap:8px}
+.tab-btn:hover{color:var(--ink)}
+.tab-btn.active{color:var(--naranja);border-bottom-color:var(--naranja)}
+.tab-content{display:none}
+.tab-content.active{display:block}
+.subsection-title{display:flex;align-items:center;gap:12px;margin:30px 0 16px}
+.subsection-title:first-of-type{margin-top:8px}
+.subsection-title h3{font-size:1.05rem;font-family:'Fraunces',serif;font-weight:600}
+.subsection-title .line{flex:1;height:1px;background:var(--line)}
+.subsection-title .badge-sm{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.6px;padding:3px 9px;border-radius:20px}
+.subsection-title .badge-sm.alist{background:var(--azul-soft);color:#2C5A80}
+.subsection-title .badge-sm.prod{background:var(--verde-soft);color:#2E6B33}
 
 /* ===== Secciones (separadores) ===== */
 .section-title{display:flex;align-items:center;gap:12px;margin:34px 0 16px}
@@ -151,6 +173,17 @@ td.num{text-align:right;font-variant-numeric:tabular-nums}
 </header>
 
 <div class="wrap">
+
+  <!-- Pestañas -->
+  <div class="tabs-nav">
+    <div class="tabs-nav-left">
+      <button class="tab-btn active" id="tabBtnRegistros" onclick="switchTab('registros')">📋 Registros</button>
+      <button class="tab-btn" id="tabBtnGraficas" onclick="switchTab('graficas')">📊 Gráficas</button>
+    </div>
+    <button class="btn-pdf" id="btnPdf" onclick="generarInformePDF()">📄 Generar informe PDF</button>
+  </div>
+
+  <div id="tabRegistros" class="tab-content active">
 
   <!-- =========================================================
        BLOQUE 1: ALISTAMIENTOS POR MÁQUINA
@@ -349,20 +382,31 @@ td.num{text-align:right;font-variant-numeric:tabular-nums}
     </div>
   </section>
 
+  </div><!-- /tabRegistros -->
+
   <!-- =========================================================
-       BLOQUE 3: GRÁFICAS (sección única con todos los gráficos)
+       BLOQUE 3: GRÁFICAS (pestaña separada, organizada por proceso)
        ========================================================= -->
-  <div class="section-title">
-    <h2>Gráficas</h2>
-    <span class="badge charts">Alistamiento · Producción</span>
+  <div id="tabGraficas" class="tab-content">
+
+  <div class="subsection-title">
+    <h3>Gráficas de Alistamiento</h3>
+    <span class="badge-sm alist">Por máquina</span>
     <div class="line"></div>
   </div>
-
   <div class="charts-grid">
     <div class="chart-box"><h3>Tiempo promedio de alistamiento por máquina</h3><canvas id="chAlistMaquina"></canvas></div>
     <div class="chart-box"><h3>Tendencia diaria del tiempo de alistamiento</h3><canvas id="chAlistTendencia"></canvas></div>
     <div class="chart-box"><h3>Distribución de registros por máquina</h3><canvas id="chAlistDona"></canvas></div>
     <div class="chart-box"><h3>Tiempo promedio por responsable (alistamiento)</h3><canvas id="chAlistResp"></canvas></div>
+  </div>
+
+  <div class="subsection-title">
+    <h3>Gráficas de Producción</h3>
+    <span class="badge-sm prod">Recepción · Transformación</span>
+    <div class="line"></div>
+  </div>
+  <div class="charts-grid">
     <div class="chart-box"><h3>Tendencia diaria: tiempo total y por litro (transformación)</h3><canvas id="chLineas"></canvas></div>
     <div class="chart-box"><h3>Litros reales vs. proyectados por día</h3><canvas id="chBarras"></canvas></div>
     <div class="chart-box"><h3>Cumplimiento acumulado: litros reales vs. déficit</h3><canvas id="chDona"></canvas></div>
@@ -376,6 +420,8 @@ td.num{text-align:right;font-variant-numeric:tabular-nums}
       </div>
     </div>
   </div>
+
+  </div><!-- /tabGraficas -->
 
 </div>
 
@@ -441,6 +487,15 @@ const cumplimiento = r => r.litrosProy>0 ? (r.litrosReal/r.litrosProy*100) : 0;
 const fmt = (n,d=2)=> Number(n).toLocaleString('es-CO',{minimumFractionDigits:d,maximumFractionDigits:d});
 const fmt0 = n => Number(n).toLocaleString('es-CO',{maximumFractionDigits:0});
 
+// Calcula si un color de fondo es claro u oscuro y devuelve el color de texto legible
+function contrastColor(hex){
+  if(!hex || hex[0] !== '#') return '#22262B';
+  const c = hex.replace('#','');
+  const r = parseInt(c.substr(0,2),16), g = parseInt(c.substr(2,2),16), b = parseInt(c.substr(4,2),16);
+  const luminance = (0.299*r + 0.587*g + 0.114*b) / 255;
+  return luminance > 0.6 ? '#22262B' : '#ffffff';
+}
+
 let filtros = {desde:'',hasta:'',materia:''};
 
 function registrosFiltrados(){
@@ -477,6 +532,106 @@ function toast(msg,tipo='ok'){
   t.className = 'show '+tipo;
   clearTimeout(toastTimer);
   toastTimer = setTimeout(()=> t.className = '', 3000);
+}
+
+/* ============================================================
+   GENERAR INFORME PDF
+   ============================================================ */
+async function generarInformePDF(){
+  const btn = document.getElementById('btnPdf');
+  btn.disabled = true;
+  btn.textContent = '⏳ Generando...';
+
+  try{
+    // Asegurar que los gráficos estén visibles y correctamente dimensionados antes de capturarlos
+    const estabaEnRegistros = document.getElementById('tabRegistros').classList.contains('active');
+    switchTab('graficas');
+    await new Promise(res=> setTimeout(res, 200));
+    Object.values(charts).forEach(c=> c && c.resize());
+    await new Promise(res=> setTimeout(res, 200));
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit:'mm', format:'a4' });
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const margin = 14;
+    let y = margin;
+
+    // Encabezado del informe
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(16);
+    doc.text('Informe de Producción – Planta de Zumo de Cítricos', margin, y);
+    y += 7;
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(10);
+    doc.setTextColor(110,110,110);
+    const fechaGen = new Date().toLocaleDateString('es-CO', {day:'numeric', month:'long', year:'numeric'});
+    doc.text('Fecha de generación: ' + fechaGen, margin, y);
+    doc.setTextColor(30,30,30);
+    y += 4;
+    doc.setDrawColor(220,220,220);
+    doc.line(margin, y, pageWidth-margin, y);
+    y += 8;
+
+    const secciones = [
+      { titulo:'Gráficas de Alistamiento', keys:['alistMaquina','alistTendencia','alistDona','alistResp'] },
+      { titulo:'Gráficas de Producción', keys:['lineas','barras','dona','materia'] }
+    ];
+
+    const gap = 6;
+    const imgWidth = (pageWidth - margin*2 - gap) / 2;
+    const imgHeight = imgWidth * 0.6;
+
+    for(const sec of secciones){
+      if(y + 10 > pageHeight - margin){ doc.addPage(); y = margin; }
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(13);
+      doc.setTextColor(30,30,30);
+      doc.text(sec.titulo, margin, y);
+      y += 6;
+
+      let col = 0;
+      for(const key of sec.keys){
+        const chart = charts[key];
+        if(!chart) continue;
+        if(col === 0 && y + imgHeight > pageHeight - margin){ doc.addPage(); y = margin; }
+        const img = chart.toBase64Image();
+        const x = margin + col*(imgWidth+gap);
+        doc.addImage(img, 'PNG', x, y, imgWidth, imgHeight);
+        col++;
+        if(col === 2){ col = 0; y += imgHeight + 8; }
+      }
+      if(col !== 0){ y += imgHeight + 8; }
+      y += 4;
+    }
+
+    const nombreArchivo = 'informe_produccion_' + new Date().toISOString().slice(0,10) + '.pdf';
+    doc.save(nombreArchivo);
+
+    if(estabaEnRegistros){ switchTab('registros'); }
+    toast('Informe PDF generado ✓','ok');
+  }catch(e){
+    console.error('Error generando el PDF:', e);
+    toast('No se pudo generar el PDF. Revisa la consola.','err');
+  }finally{
+    btn.disabled = false;
+    btn.textContent = '📄 Generar informe PDF';
+  }
+}
+
+/* ============================================================
+   PESTAÑAS
+   ============================================================ */
+function switchTab(tab){
+  const esRegistros = tab === 'registros';
+  document.getElementById('tabRegistros').classList.toggle('active', esRegistros);
+  document.getElementById('tabGraficas').classList.toggle('active', !esRegistros);
+  document.getElementById('tabBtnRegistros').classList.toggle('active', esRegistros);
+  document.getElementById('tabBtnGraficas').classList.toggle('active', !esRegistros);
+  if(!esRegistros){
+    // Los gráficos se crearon mientras estaban ocultos; hay que redimensionarlos al mostrarlos.
+    setTimeout(()=>{ Object.values(charts).forEach(c=> c && c.resize()); }, 0);
+  }
 }
 
 /* ============================================================
@@ -710,6 +865,7 @@ function renderTablaAlist(data){
    GRÁFICAS — PRODUCCIÓN
    ============================================================ */
 let charts = {};
+Chart.register(ChartDataLabels);
 function destruir(k){ if(charts[k]){ charts[k].destroy(); delete charts[k]; } }
 
 function renderGraficasProd(data){
@@ -723,6 +879,14 @@ function renderGraficasProd(data){
       {label:'Tiempo por litro (min/L)',data:data.map(porLitro),borderColor:'#4C9A52',backgroundColor:'rgba(76,154,82,.1)',tension:.3,yAxisID:'y1'}
     ]},
     options:{responsive:true,interaction:{mode:'index',intersect:false},
+      layout:{padding:{top:22,bottom:6}},
+      plugins:{datalabels:{
+        color:(ctx)=> ctx.dataset.borderColor,
+        align:(ctx)=> ctx.dataset.yAxisID==='y1' ? 'bottom' : 'top',
+        anchor:'end',clamp:true,
+        font:{size:10,weight:'600'},
+        formatter:(v,ctx)=> ctx.dataset.yAxisID==='y1' ? fmt(v,3) : fmt0(v)
+      }},
       scales:{
         y:{type:'linear',position:'left',title:{display:true,text:'min'}},
         y1:{type:'linear',position:'right',grid:{drawOnChartArea:false},title:{display:true,text:'min/L'}}
@@ -736,7 +900,13 @@ function renderGraficasProd(data){
       {label:'Litros reales',data:data.map(r=>Number(r.litrosReal||0)),backgroundColor:'#4C9A52'},
       {label:'Litros proyectados',data:data.map(r=>Number(r.litrosProy||0)),backgroundColor:'#F6C026'}
     ]},
-    options:{responsive:true,scales:{y:{title:{display:true,text:'litros'}}}}
+    options:{responsive:true,
+      layout:{padding:{top:22}},
+      plugins:{datalabels:{
+        color:'#22262B',align:'top',anchor:'end',clamp:true,font:{size:10,weight:'600'},
+        formatter:v=> v>0? fmt0(v) : ''
+      }},
+      scales:{y:{title:{display:true,text:'litros'}}}}
   });
 
   const litrosTot = data.reduce((s,r)=>s+Number(r.litrosReal||0),0);
@@ -747,6 +917,15 @@ function renderGraficasProd(data){
     type:'doughnut',
     data:{labels:['Litros reales','Déficit vs. proyectado'],datasets:[{data:[litrosTot,deficit],backgroundColor:['#4C9A52','#FCE9E6'],borderWidth:2,borderColor:'#fff'}]},
     options:{responsive:true,plugins:{legend:{position:'bottom'},
+      datalabels:{
+        color:(ctx)=> contrastColor(ctx.dataset.backgroundColor[ctx.dataIndex]),
+        font:{size:11,weight:'700'},
+        formatter:(v,ctx)=>{
+          const tot = ctx.dataset.data.reduce((a,b)=>a+b,0);
+          const p = tot? (v/tot*100):0;
+          return v>0 ? [fmt0(v)+' L', '('+fmt(p,1)+'%)'] : '';
+        }
+      },
       tooltip:{callbacks:{label:c=>{
         const tot=litrosTot+deficit; const p=tot?(c.parsed/tot*100):0;
         return `${c.label}: ${fmt0(c.parsed)} L (${fmt(p,1)}%)`;
@@ -764,7 +943,14 @@ function renderGraficasProd(data){
     type:'bar',
     data:{labels:mats,datasets:[{label:'Promedio min/L',data:promMat,
       backgroundColor:['#F58220','#F6C026','#E8842B','#6B7280']}]},
-    options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{title:{display:true,text:'min/L'}}}}
+    options:{responsive:true,
+      layout:{padding:{top:22}},
+      plugins:{legend:{display:false},
+      datalabels:{
+        color:'#22262B',align:'top',anchor:'end',clamp:true,font:{size:10,weight:'600'},
+        formatter:v=> v>0? fmt(v,3) : ''
+      }},
+      scales:{y:{title:{display:true,text:'min/L'}}}}
   });
 }
 
@@ -800,7 +986,12 @@ function renderGraficasAlist(data){
       {label:'Alistamiento inicial',data:promIniPorMaq,backgroundColor:'#3E7CB1'},
       {label:'Alistamiento final',data:promFinPorMaq,backgroundColor:'#F58220'}
     ]},
-    options:{responsive:true,scales:{y:{title:{display:true,text:'min promedio'}}}}
+    options:{responsive:true,
+      plugins:{datalabels:{
+        color:'#fff',align:'center',anchor:'center',font:{size:11,weight:'700'},
+        formatter:v=> v>0? fmt(v,1) : ''
+      }},
+      scales:{y:{title:{display:true,text:'min promedio'}}}}
   });
 
   const fechasUnicas = [...new Set(data.map(r=>r.fecha))].sort();
@@ -810,7 +1001,13 @@ function renderGraficasAlist(data){
     type:'line',
     data:{labels:fechasUnicas,datasets:[{label:'Tiempo total de alistamiento (min)',data:tiempoPorFecha,
       borderColor:'#3E7CB1',backgroundColor:'rgba(62,124,177,.12)',tension:.3,fill:true}]},
-    options:{responsive:true,scales:{y:{title:{display:true,text:'min'}}}}
+    options:{responsive:true,
+      layout:{padding:{top:22}},
+      plugins:{datalabels:{
+        color:'#3E7CB1',align:'top',anchor:'end',clamp:true,font:{size:10,weight:'600'},
+        formatter:v=> v>0? fmt0(v) : ''
+      }},
+      scales:{y:{title:{display:true,text:'min'}}}}
   });
 
   const conteoMaq = maquinasList.map(m=> data.filter(r=>r.maquina===m).length);
@@ -819,7 +1016,12 @@ function renderGraficasAlist(data){
     type:'doughnut',
     data:{labels:maquinasList,datasets:[{data:conteoMaq,
       backgroundColor:['#F58220','#F6C026','#4C9A52','#3E7CB1','#6B7280'],borderWidth:2,borderColor:'#fff'}]},
-    options:{responsive:true,plugins:{legend:{position:'bottom'}}}
+    options:{responsive:true,plugins:{legend:{position:'bottom'},
+      datalabels:{
+        color:(ctx)=> contrastColor(ctx.dataset.backgroundColor[ctx.dataIndex]),
+        font:{size:11,weight:'700'},formatter:v=> v>0? v : ''
+      }
+    }}
   });
 
   const respList = [...new Set(data.map(r=>r.responsable))];
@@ -831,7 +1033,14 @@ function renderGraficasAlist(data){
   charts.alistResp = new Chart(document.getElementById('chAlistResp'),{
     type:'bar',
     data:{labels:respList,datasets:[{label:'Promedio min por registro',data:promResp,backgroundColor:'#4C9A52'}]},
-    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{title:{display:true,text:'min promedio'}}}}
+    options:{indexAxis:'y',responsive:true,
+      layout:{padding:{right:30}},
+      plugins:{legend:{display:false},
+      datalabels:{
+        color:'#22262B',align:'right',anchor:'end',clamp:true,font:{size:10,weight:'600'},
+        formatter:v=> v>0? fmt(v,1) : ''
+      }},
+      scales:{x:{title:{display:true,text:'min promedio'}}}}
   });
 }
 
